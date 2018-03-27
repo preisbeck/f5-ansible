@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = r'''
 ---
-module: bigip_user_remote
+module: bigip_remote_role_groups
 short_description: Manage remote role groups on a BIG-IP
 description:
   - This module manages remote role groups.
@@ -35,46 +35,40 @@ options:
   remote_access:
     description:
       - Enables or disables remote access for the specified group of remotely authenticated users.
-    required: False
   assigned_role
     description:
       - Specifies the authorization (level of access) for the account.
-    required: False
   partition_access
     description:
       - Specifies the accessible partitions for the account.
-    required: False
   terminal_access:
     description
       - Specifies terminal-based accessibility for remote accounts.
-    required: False
 extends_documentation_fragment: f5
 author:
   - Phillip Reisbeck (@preisbeck)
 '''
 
 EXAMPLES = r'''
-- name: Create a ...
-  bigip_user_remote:
+- name: Create a new remote role group
+  bigip_remote_role_groups:
     name: foo
     password: secret
     server: lb.mydomain.com
     state: present
     user: admin
+    group_name: ldap_group
+    line_order: 1
+    attribute_string: memberOf=cn=ldap_group,cn=ldap.group,ou=ldap
+    remote_access: enabled
+    assigned_role: administrator
+    partition_access: all
+    treminal_access: disabled
   delegate_to: localhost
 '''
 
 RETURN = r'''
-param1:
-  description: The new param1 value of the resource.
-  returned: changed
-  type: bool
-  sample: true
-param2:
-  description: The new param2 value of the resource.
-  returned: changed
-  type: string
-  sample: Foo is bar
+# only common fields returned
 '''
 
 from ansible.module_utils.basic import AnsibleModule
@@ -356,6 +350,7 @@ class ArgumentSpec(object):
             )
             partition_access=dict(
                 default='Common',
+                fallback=(env_fallback, ['F5_PARTITION'])
             )
             terminal_access=dict(
                 default='Disabled'
